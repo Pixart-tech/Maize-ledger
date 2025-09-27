@@ -1,0 +1,26 @@
+
+export const formatINR = (amount: number): string => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+export const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+export const getTodayDateString = (): string => {
+    return new Date().toISOString().split('T')[0];
+}
+
+export const formatWeight = (kg: number): string => {
+    return `${kg.toFixed(2)} kg`;
+}

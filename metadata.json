@@ -1,0 +1,5 @@
+{
+  "name": "Maize Ledger Pro",
+  "description": "An offline-first ledger and billing application for maize traders, focused on purchase/sale weighing, billing, brokerage, and ledger management, built with React and Tailwind CSS.",
+  "requestFramePermissions": []
+}
