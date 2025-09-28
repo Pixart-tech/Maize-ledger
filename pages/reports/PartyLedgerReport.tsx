@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../../hooks/useData';
 import { calculateTransactionTotals } from '../../services/calculationService';
 import { formatDate, formatINR } from '../../utils/formatters';
-import { TransactionType } from '../../types';
+import { PaymentType, TransactionType } from '../../types';
 
 declare const jsPDF: any;
 declare const XLSX: any;
@@ -31,14 +31,17 @@ const PartyLedgerReport: React.FC = () => {
             let narrative: string = tx.type;
 
             if (tx.type === TransactionType.Payment) {
-                const cashDetails = [tx.cash_payment_purpose, tx.cash_description?.trim()].filter(Boolean).join(' – ');
-                if (tx.payment_type === 'Paid') {
+                if (tx.payment_type === PaymentType.Paid) {
                     debit = tx.amount_received;
                     narrative = 'Payment (Paid)';
-                } else { // Received
+                } else {
                     credit = tx.amount_received;
                     narrative = 'Payment (Received)';
                 }
+            } else if (tx.type === TransactionType.Cash) {
+                debit = tx.amount_received;
+                const cashDetails = [tx.cash_payment_purpose, tx.cash_description?.trim()].filter(Boolean).join(' – ');
+                narrative = 'Cash Payment';
                 if (cashDetails) {
                     narrative += ` - ${cashDetails}`;
                 }

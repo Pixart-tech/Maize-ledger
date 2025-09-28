@@ -46,6 +46,7 @@ export enum TransactionType {
   Asami = 'Asami',
   ZeroDalal = 'Zero Dalal',
   Payment = 'Payment',
+  Cash = 'Cash',
 }
 
 export enum PaymentType {
