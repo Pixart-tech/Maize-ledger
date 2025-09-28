@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Party, Crop, ChargeHead, BankAccount, Transaction } from '../types';
-import { DEFAULT_PARTIES, DEFAULT_CROPS, DEFAULT_CHARGE_HEADS, DEFAULT_BANK_ACCOUNTS } from '../constants';
+import { DEFAULT_PARTIES, DEFAULT_CROPS, DEFAULT_CHARGE_HEADS, DEFAULT_BANK_ACCOUNTS, DEFAULT_TRANSACTIONS } from '../constants';
 
 interface DataContextType {
   parties: Party[];
@@ -45,14 +45,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Seed data if it doesn't exist
-    if (!localStorage.getItem('seeded')) {
+    const seedVersionKey = 'seeded_v2';
+    if (!localStorage.getItem(seedVersionKey)) {
         setToStorage<Party[]>('parties', DEFAULT_PARTIES);
         setToStorage<Crop[]>('crops', DEFAULT_CROPS);
         setToStorage<ChargeHead[]>('chargeHeads', DEFAULT_CHARGE_HEADS);
         setToStorage<BankAccount[]>('bankAccounts', DEFAULT_BANK_ACCOUNTS);
-        setToStorage<Transaction[]>('transactions', []);
-        localStorage.setItem('seeded', 'true');
+        setToStorage<Transaction[]>('transactions', DEFAULT_TRANSACTIONS);
+        localStorage.setItem(seedVersionKey, 'true');
+        localStorage.removeItem('seeded');
     }
     
     setParties(getFromStorage<Party[]>('parties', []));
