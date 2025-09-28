@@ -5,7 +5,8 @@ import Dashboard from './pages/Dashboard';
 import PartyMaster from './pages/masters/PartyMaster';
 import VoucherEntry from './pages/transactions/VoucherEntry';
 import PartyLedgerReport from './pages/reports/PartyLedgerReport';
-import { HomeIcon, UsersIcon, DocumentAddIcon, DocumentReportIcon, SunIcon, MoonIcon, MenuIcon, XIcon } from './components/Icons';
+import TransactionsDashboard from './pages/transactions/TransactionsDashboard';
+import { HomeIcon, UsersIcon, DocumentAddIcon, DocumentReportIcon, SunIcon, MoonIcon, MenuIcon, XIcon, TableIcon } from './components/Icons';
 
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -44,6 +45,10 @@ const App: React.FC = () => {
       <NavLink to="/voucher/new" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
         <DocumentAddIcon />
         <span className="ml-3">New Voucher</span>
+      </NavLink>
+      <NavLink to="/transactions" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+        <TableIcon />
+        <span className="ml-3">Transactions</span>
       </NavLink>
       <NavLink to="/masters/parties" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
         <UsersIcon />
@@ -98,6 +103,7 @@ const App: React.FC = () => {
               <Route path="/masters/parties" element={<PartyMaster />} />
               <Route path="/voucher/new" element={<VoucherEntry />} />
               <Route path="/voucher/edit/:id" element={<VoucherEntry />} />
+              <Route path="/transactions" element={<TransactionsDashboard />} />
               <Route path="/reports/party-ledger" element={<PartyLedgerReport />} />
             </Routes>
           </main>
