@@ -2,13 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../hooks/useData';
 import { calculateTransactionTotals } from '../../services/calculationService';
-import { downloadTransactionPdf } from '../../services/transactionPdf';
 import { formatDate, formatINR } from '../../utils/formatters';
 import { TransactionType } from '../../types';
-import { DocumentDownloadIcon, PencilIcon, TrashIcon } from '../../components/Icons';
+import { PencilIcon, TrashIcon } from '../../components/Icons';
 
 const TransactionsDashboard: React.FC = () => {
-  const { transactions, parties, crops, chargeHeads, bankAccounts, deleteTransaction, loading } = useData();
+  const { transactions, parties, chargeHeads, deleteTransaction, loading } = useData();
   const navigate = useNavigate();
 
   const [selectedPartyId, setSelectedPartyId] = useState('');
@@ -180,20 +179,6 @@ const TransactionsDashboard: React.FC = () => {
                     <td className="p-4 text-right font-mono">{formatINR(totals.balance)}</td>
                     <td className="p-4">
                       <div className="flex justify-end gap-3">
-                        <button
-                          onClick={() =>
-                            downloadTransactionPdf(transaction, {
-                              parties,
-                              crops,
-                              chargeHeads,
-                              bankAccounts,
-                            })
-                          }
-                          className="p-2 rounded-md bg-emerald-50 dark:bg-emerald-600/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-600/40"
-                          title="Download PDF"
-                        >
-                          <DocumentDownloadIcon />
-                        </button>
                         <button
                           onClick={() => navigate(`/voucher/edit/${transaction.id}`)}
                           className="p-2 rounded-md bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-600/40"
