@@ -233,7 +233,7 @@ const VoucherEntry: React.FC = () => {
     };
     
     const handleSave = () => {
-        if (!voucher.party_id) {
+        if (voucher.type !== TransactionType.Cash && !voucher.party_id) {
             alert('Please select a party.');
             return;
         }
@@ -345,13 +345,6 @@ const VoucherEntry: React.FC = () => {
                 <div className="p-6 space-y-4">
                     <div><label className="block text-sm font-medium">Type</label><select name="type" value={voucher.type} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">{Object.values(TransactionType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                     <div><label className="block text-sm font-medium">Date</label><input type="date" name="date" value={voucher.date} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600" /></div>
-                    <div>
-                        <label className="block text-sm font-medium">Party</label>
-                        <select name="party_id" value={voucher.party_id} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
-                            <option value="">Select Party</option>
-                            {filteredParties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                    </div>
                     <div>
                         <label className="block text-sm font-medium">Purpose</label>
                         <select
