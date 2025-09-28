@@ -4,8 +4,15 @@ import { calculateTransactionTotals } from '../../services/calculationService';
 import { formatDate, formatINR } from '../../utils/formatters';
 import { PaymentType, TransactionType } from '../../types';
 
-declare const jsPDF: any;
 declare const XLSX: any;
+
+declare global {
+    interface Window {
+        jspdf?: {
+            jsPDF: new (...args: any[]) => any;
+        };
+    }
+}
 
 const PartyLedgerReport: React.FC = () => {
     const { parties, transactions, chargeHeads, loading } = useData();
@@ -83,13 +90,27 @@ const PartyLedgerReport: React.FC = () => {
     };
     
     const handleExportPDF = () => {
-        const doc = new jsPDF();
+        const jsPDFConstructor = (window as Window & typeof globalThis)?.jspdf?.jsPDF;
+        if (!jsPDFConstructor) {
+            console.error('Unable to export PDF: jsPDF is not available. Ensure the jsPDF script is loaded.');
+            alert('Unable to export PDF because jsPDF failed to load. Please try again after reloading the page.');
+            return;
+        }
+
+        const doc = new jsPDFConstructor();
         const selectedParty = parties.find(p => p.id === selectedPartyId);
 
         doc.setFontSize(18);
         doc.text(`Ledger for ${selectedParty?.name || 'N/A'}`, 14, 22);
-        
-        doc.autoTable({
+
+        const autoTable = (doc as { autoTable?: (options: any) => void }).autoTable;
+        if (!autoTable) {
+            console.error('Unable to export PDF: jsPDF autoTable plugin is not available.');
+            alert('Unable to export PDF because the autoTable plugin is missing. Please reload the page.');
+            return;
+        }
+
+        autoTable({
             startY: 30,
             head: [['Date', 'Bill No', 'Type', 'Debit', 'Credit', 'Balance']],
             body: ledgerData.map(item => [
