@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../../hooks/useData';
-import { Transaction, TransactionLine, TransactionType, RateUnit, TransactionTotals, Party, ChargeKind, PartyType, PaymentType, ChargeHead } from '../../types';
+import { Transaction, TransactionLine, TransactionType, RateUnit, TransactionTotals, Party, ChargeKind, PartyType, PaymentType, CashPaymentPurpose, ChargeHead } from '../../types';
 import { calculateNetWeight, calculateLineAmount, calculateTransactionTotals } from '../../services/calculationService';
 import { getTodayDateString, formatINR } from '../../utils/formatters';
 import { TrashIcon } from '../../components/Icons';
@@ -33,6 +33,8 @@ const VoucherEntry: React.FC = () => {
         charges: [],
         amount_received: 0,
         payment_type: PaymentType.Received,
+        cash_payment_purpose: CashPaymentPurpose.Other,
+        cash_description: '',
     });
     const [totals, setTotals] = useState<TransactionTotals>({ subtotal: 0, total_additions: 0, total_deductions: 0, tds_amount: 0, grand_total: 0, balance: 0 });
     const [selectedParty, setSelectedParty] = useState<Party | undefined>(undefined);
@@ -64,7 +66,11 @@ const VoucherEntry: React.FC = () => {
         if (id) {
             const existingVoucher = transactions.find(t => t.id === id);
             if (existingVoucher) {
-                setVoucher(existingVoucher);
+                setVoucher({
+                    ...existingVoucher,
+                    cash_payment_purpose: existingVoucher.cash_payment_purpose || CashPaymentPurpose.Other,
+                    cash_description: existingVoucher.cash_description || '',
+                });
             }
         }
     }, [id, transactions]);
@@ -118,9 +124,9 @@ const VoucherEntry: React.FC = () => {
         setTotals(newTotals);
     }, [voucher, chargeHeads, parties]);
     
-    const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        
+
         setVoucher(prev => {
             const newVoucher = { ...prev, [name]: value };
             if (name === 'type') {
@@ -128,6 +134,13 @@ const VoucherEntry: React.FC = () => {
                 newVoucher.lines = [];
                 newVoucher.charges = [];
                 newVoucher.amount_received = 0;
+                if (value === TransactionType.Payment) {
+                    newVoucher.cash_payment_purpose = CashPaymentPurpose.Other;
+                    newVoucher.cash_description = '';
+                } else {
+                    newVoucher.cash_payment_purpose = undefined;
+                    newVoucher.cash_description = undefined;
+                }
             }
             return newVoucher;
         });
@@ -272,16 +285,46 @@ const VoucherEntry: React.FC = () => {
                             {filteredParties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                     </div>
-                     <div>
-                        <label className="block text-sm font-medium">Bank Name</label>
-                        <select name="bank_account_id" value={voucher.bank_account_id || ''} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
-                            <option value="">Select Bank</option>
-                            {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.bank_name}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium">Amount</label>
-                        <input type="number" name="amount_received" value={voucher.amount_received || ''} onChange={e => setVoucher(p => ({...p, amount_received: parseFloat(e.target.value) || 0}))} className="w-full mt-1 dark:bg-slate-600 rounded-md shadow-sm border-slate-300 dark:border-slate-500 font-mono text-right" />
+                    <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-lg">
+                        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+                            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">Cash</h2>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium">Purpose</label>
+                                <select
+                                    name="cash_payment_purpose"
+                                    value={voucher.cash_payment_purpose || CashPaymentPurpose.Other}
+                                    onChange={handleHeaderChange}
+                                    className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
+                                >
+                                    {Object.values(CashPaymentPurpose).map(purpose => (
+                                        <option key={purpose} value={purpose}>{purpose}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Bank Name</label>
+                                <select name="bank_account_id" value={voucher.bank_account_id || ''} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
+                                    <option value="">Select Bank</option>
+                                    {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.bank_name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Notes</label>
+                                <textarea
+                                    name="cash_description"
+                                    value={voucher.cash_description || ''}
+                                    onChange={handleHeaderChange}
+                                    rows={3}
+                                    className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">Amount</label>
+                                <input type="number" name="amount_received" value={voucher.amount_received || ''} onChange={e => setVoucher(p => ({...p, amount_received: parseFloat(e.target.value) || 0}))} className="w-full mt-1 dark:bg-slate-600 rounded-md shadow-sm border-slate-300 dark:border-slate-500 font-mono text-right" />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-end p-6 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg space-x-4">
