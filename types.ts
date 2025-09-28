@@ -53,14 +53,6 @@ export enum PaymentType {
   Received = 'Received',
 }
 
-export enum CashPaymentPurpose {
-  Salary = 'Salary',
-  LorryFreight = 'Lorry Freight',
-  NSG = 'NSG',
-  Pada = 'Pada',
-  Other = 'Other',
-}
-
 export enum RateUnit {
   per_kg = 'per_kg',
   per_quintal = 'per_quintal',
@@ -135,8 +127,6 @@ export interface Transaction {
   // Payment Voucher specific fields
   payment_type?: PaymentType;
   bank_account_id?: string;
-  cash_payment_purpose?: CashPaymentPurpose;
-  cash_description?: string;
 }
 
 // For UI state and calculations, not persisted directly

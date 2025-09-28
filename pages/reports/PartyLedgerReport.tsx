@@ -31,16 +31,12 @@ const PartyLedgerReport: React.FC = () => {
             let narrative: string = tx.type;
 
             if (tx.type === TransactionType.Payment) {
-                const cashDetails = [tx.cash_payment_purpose, tx.cash_description?.trim()].filter(Boolean).join(' – ');
                 if (tx.payment_type === 'Paid') {
                     debit = tx.amount_received;
                     narrative = 'Payment (Paid)';
                 } else { // Received
                     credit = tx.amount_received;
                     narrative = 'Payment (Received)';
-                }
-                if (cashDetails) {
-                    narrative += ` - ${cashDetails}`;
                 }
             } else {
                 const party = parties.find(p => p.id === tx.party_id);
