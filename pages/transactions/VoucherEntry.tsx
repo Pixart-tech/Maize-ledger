@@ -66,10 +66,18 @@ const VoucherEntry: React.FC = () => {
         if (id) {
             const existingVoucher = transactions.find(t => t.id === id);
             if (existingVoucher) {
+                const isCashVoucher = existingVoucher.type === TransactionType.Cash;
                 setVoucher({
                     ...existingVoucher,
-                    cash_payment_purpose: existingVoucher.cash_payment_purpose || CashPaymentPurpose.Other,
-                    cash_description: existingVoucher.cash_description || '',
+                    payment_type: existingVoucher.type === TransactionType.Payment
+                        ? existingVoucher.payment_type || PaymentType.Received
+                        : existingVoucher.payment_type,
+                    cash_payment_purpose: isCashVoucher
+                        ? existingVoucher.cash_payment_purpose || CashPaymentPurpose.Other
+                        : undefined,
+                    cash_description: isCashVoucher
+                        ? existingVoucher.cash_description || ''
+                        : undefined,
                 });
             }
         }
@@ -79,7 +87,7 @@ const VoucherEntry: React.FC = () => {
         const party = parties.find(p => p.id === voucher.party_id);
         setSelectedParty(party);
 
-        if ([TransactionType.Payment, TransactionType.Sale].includes(voucher.type) || voucher.lines.length === 0) {
+        if ([TransactionType.Payment, TransactionType.Cash, TransactionType.Sale].includes(voucher.type) || voucher.lines.length === 0) {
              if(voucher.charges.length > 0) setVoucher(prev => ({...prev, charges: []}));
              return;
         }
@@ -115,7 +123,7 @@ const VoucherEntry: React.FC = () => {
 
 
     useEffect(() => {
-        if(voucher.type === TransactionType.Payment) {
+        if([TransactionType.Payment, TransactionType.Cash].includes(voucher.type)) {
             setTotals({ subtotal: 0, total_additions: 0, total_deductions: 0, tds_amount: 0, grand_total: 0, balance: 0 });
             return;
         };
@@ -134,10 +142,17 @@ const VoucherEntry: React.FC = () => {
                 newVoucher.lines = [];
                 newVoucher.charges = [];
                 newVoucher.amount_received = 0;
+
                 if (value === TransactionType.Payment) {
+                    newVoucher.payment_type = PaymentType.Received;
+                    newVoucher.cash_payment_purpose = undefined;
+                    newVoucher.cash_description = undefined;
+                } else if (value === TransactionType.Cash) {
+                    newVoucher.payment_type = undefined;
                     newVoucher.cash_payment_purpose = CashPaymentPurpose.Other;
                     newVoucher.cash_description = '';
                 } else {
+                    newVoucher.payment_type = undefined;
                     newVoucher.cash_payment_purpose = undefined;
                     newVoucher.cash_description = undefined;
                 }
@@ -229,6 +244,16 @@ const VoucherEntry: React.FC = () => {
                 charges: [],
                 bill_no: voucher.payment_type === PaymentType.Received ? 'Receipt' : 'Payment',
             });
+        } else if (voucher.type === TransactionType.Cash) {
+            saveTransaction({
+                ...voucher,
+                payment_type: undefined,
+                lines: [],
+                charges: [],
+                bill_no: 'Cash Voucher',
+                cash_payment_purpose: voucher.cash_payment_purpose || CashPaymentPurpose.Other,
+                cash_description: voucher.cash_description?.trim() || undefined,
+            });
         } else {
             const finalTotals = calculateTransactionTotals(voucher, chargeHeads, selectedParty);
             const finalVoucher = {
@@ -276,7 +301,7 @@ const VoucherEntry: React.FC = () => {
                 </div>
                 <div className="p-6 space-y-4">
                     <div><label className="block text-sm font-medium">Type</label><select name="type" value={voucher.type} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">{Object.values(TransactionType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-                    <div><label className="block text-sm font-medium">Payment Type</label><select name="payment_type" value={voucher.payment_type} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">{Object.values(PaymentType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                    <div><label className="block text-sm font-medium">Payment Type</label><select name="payment_type" value={voucher.payment_type || PaymentType.Received} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">{Object.values(PaymentType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                     <div><label className="block text-sm font-medium">Date</label><input type="date" name="date" value={voucher.date} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600" /></div>
                     <div>
                         <label className="block text-sm font-medium">Party</label>
@@ -285,51 +310,92 @@ const VoucherEntry: React.FC = () => {
                             {filteredParties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                     </div>
-                    <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-lg">
-                        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
-                            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200">Cash</h2>
-                        </div>
-                        <div className="p-4 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium">Purpose</label>
-                                <select
-                                    name="cash_payment_purpose"
-                                    value={voucher.cash_payment_purpose || CashPaymentPurpose.Other}
-                                    onChange={handleHeaderChange}
-                                    className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
-                                >
-                                    {Object.values(CashPaymentPurpose).map(purpose => (
-                                        <option key={purpose} value={purpose}>{purpose}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">Bank Name</label>
-                                <select name="bank_account_id" value={voucher.bank_account_id || ''} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
-                                    <option value="">Select Bank</option>
-                                    {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.bank_name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">Notes</label>
-                                <textarea
-                                    name="cash_description"
-                                    value={voucher.cash_description || ''}
-                                    onChange={handleHeaderChange}
-                                    rows={3}
-                                    className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">Amount</label>
-                                <input type="number" name="amount_received" value={voucher.amount_received || ''} onChange={e => setVoucher(p => ({...p, amount_received: parseFloat(e.target.value) || 0}))} className="w-full mt-1 dark:bg-slate-600 rounded-md shadow-sm border-slate-300 dark:border-slate-500 font-mono text-right" />
-                            </div>
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium">Bank Name</label>
+                        <select name="bank_account_id" value={voucher.bank_account_id || ''} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
+                            <option value="">Select Bank</option>
+                            {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.bank_name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Amount</label>
+                        <input
+                            type="number"
+                            name="amount_received"
+                            value={voucher.amount_received || ''}
+                            onChange={e => setVoucher(p => ({ ...p, amount_received: parseFloat(e.target.value) || 0 }))}
+                            className="w-full mt-1 dark:bg-slate-600 rounded-md shadow-sm border-slate-300 dark:border-slate-500 font-mono text-right"
+                        />
                     </div>
                 </div>
                 <div className="flex justify-end p-6 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg space-x-4">
                     <button onClick={() => navigate('/')} className="px-5 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 font-medium">Cancel</button>
                     <button onClick={handleSave} className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold">Save Payment</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (voucher.type === TransactionType.Cash) {
+        return (
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg max-w-2xl mx-auto">
+                <div className="p-6 border-b dark:border-slate-700">
+                    <h1 className="text-2xl font-bold">New Cash Voucher</h1>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div><label className="block text-sm font-medium">Type</label><select name="type" value={voucher.type} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">{Object.values(TransactionType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                    <div><label className="block text-sm font-medium">Date</label><input type="date" name="date" value={voucher.date} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600" /></div>
+                    <div>
+                        <label className="block text-sm font-medium">Party</label>
+                        <select name="party_id" value={voucher.party_id} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
+                            <option value="">Select Party</option>
+                            {filteredParties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Purpose</label>
+                        <select
+                            name="cash_payment_purpose"
+                            value={voucher.cash_payment_purpose || CashPaymentPurpose.Other}
+                            onChange={handleHeaderChange}
+                            className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
+                        >
+                            {Object.values(CashPaymentPurpose).map(purpose => (
+                                <option key={purpose} value={purpose}>{purpose}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Bank Name</label>
+                        <select name="bank_account_id" value={voucher.bank_account_id || ''} onChange={handleHeaderChange} className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600">
+                            <option value="">Select Bank</option>
+                            {bankAccounts.map(b => <option key={b.id} value={b.id}>{b.bank_name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Description</label>
+                        <textarea
+                            name="cash_description"
+                            value={voucher.cash_description || ''}
+                            onChange={handleHeaderChange}
+                            rows={3}
+                            className="mt-1 w-full dark:bg-slate-700 rounded-md shadow-sm border-slate-300 dark:border-slate-600"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Amount</label>
+                        <input
+                            type="number"
+                            name="amount_received"
+                            value={voucher.amount_received || ''}
+                            onChange={e => setVoucher(p => ({ ...p, amount_received: parseFloat(e.target.value) || 0 }))}
+                            className="w-full mt-1 dark:bg-slate-600 rounded-md shadow-sm border-slate-300 dark:border-slate-500 font-mono text-right"
+                        />
+                    </div>
+                </div>
+                <div className="flex justify-end p-6 bg-slate-50 dark:bg-slate-800/50 rounded-b-lg space-x-4">
+                    <button onClick={() => navigate('/')} className="px-5 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 font-medium">Cancel</button>
+                    <button onClick={handleSave} className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold">Save Cash</button>
                 </div>
             </div>
         );
