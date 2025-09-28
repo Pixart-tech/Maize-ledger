@@ -59,6 +59,59 @@ const TransactionsDashboard: React.FC = () => {
     }
   };
 
+  const handleExportPdf = () => {
+    const jsPDFConstructor = (window as any)?.jspdf?.jsPDF;
+
+    if (!jsPDFConstructor) {
+      console.warn('Unable to export PDF: jsPDF library not loaded.');
+      return;
+    }
+
+    const tableData = filteredTransactions.map(transaction => {
+      const party = parties.find(p => p.id === transaction.party_id);
+      const totals = calculateTransactionTotals(transaction, chargeHeads, party);
+
+      return [
+        formatDate(transaction.date),
+        transaction.bill_no,
+        party?.name || '—',
+        transaction.type,
+        formatINR(totals.subtotal),
+        formatINR(totals.total_additions),
+        formatINR(totals.total_deductions),
+        formatINR(totals.grand_total),
+        formatINR(transaction.amount_received),
+        formatINR(totals.balance)
+      ];
+    });
+
+    const doc = new jsPDFConstructor();
+    const autoTable = (doc as any)?.autoTable;
+
+    if (typeof autoTable !== 'function') {
+      console.warn('Unable to export PDF: jsPDF autoTable plugin not loaded.');
+      return;
+    }
+
+    autoTable.call(doc, {
+      head: [[
+        'Date',
+        'Bill No',
+        'Party',
+        'Type',
+        'Subtotal',
+        'Additions',
+        'Deductions',
+        'Grand Total',
+        'Received',
+        'Balance'
+      ]],
+      body: tableData
+    });
+
+    doc.save('Transactions.pdf');
+  };
+
   if (loading) {
     return <p className="text-center p-8">Loading transactions...</p>;
   }
@@ -67,12 +120,21 @@ const TransactionsDashboard: React.FC = () => {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Transactions</h1>
-        <button
-          onClick={() => navigate('/voucher/new')}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
-        >
-          Create Voucher
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleExportPdf}
+            disabled={filteredTransactions.length === 0}
+            className="inline-flex items-center justify-center px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
+          >
+            Export PDF
+          </button>
+          <button
+            onClick={() => navigate('/voucher/new')}
+            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
+          >
+            Create Voucher
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
