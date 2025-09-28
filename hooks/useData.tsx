@@ -12,6 +12,7 @@ interface DataContextType {
   saveParty: (party: Party) => void;
   deleteParty: (partyId: string) => void;
   saveTransaction: (transaction: Transaction) => void;
+  deleteTransaction: (transactionId: string) => void;
   loading: boolean;
 }
 
@@ -103,8 +104,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
+  const deleteTransaction = useCallback((transactionId: string) => {
+    setTransactions(prev => {
+      const newTransactions = prev.filter(transaction => transaction.id !== transactionId);
+      setToStorage('transactions', newTransactions);
+      return newTransactions;
+    });
+  }, []);
+
   return (
-    <DataContext.Provider value={{ parties, crops, chargeHeads, bankAccounts, transactions, saveParty, deleteParty, saveTransaction, loading }}>
+    <DataContext.Provider value={{ parties, crops, chargeHeads, bankAccounts, transactions, saveParty, deleteParty, saveTransaction, deleteTransaction, loading }}>
       {children}
     </DataContext.Provider>
   );
