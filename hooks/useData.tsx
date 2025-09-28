@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { Party, Crop, ChargeHead, BankAccount, Transaction } from '../types';
 import { DEFAULT_PARTIES, DEFAULT_CROPS, DEFAULT_CHARGE_HEADS, DEFAULT_BANK_ACCOUNTS, DEFAULT_TRANSACTIONS } from '../constants';
 
-interface DataContextType {
+export interface DataContextType {
   parties: Party[];
   crops: Crop[];
   chargeHeads: ChargeHead[];
@@ -105,10 +105,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const deleteTransaction = useCallback((transactionId: string) => {
-    setTransactions(prev => {
-      const newTransactions = prev.filter(transaction => transaction.id !== transactionId);
-      setToStorage('transactions', newTransactions);
-      return newTransactions;
+    setTransactions(previousTransactions => {
+      const updatedTransactions = previousTransactions.filter(transaction => transaction.id !== transactionId);
+      setToStorage('transactions', updatedTransactions);
+      return updatedTransactions;
     });
   }, []);
 
