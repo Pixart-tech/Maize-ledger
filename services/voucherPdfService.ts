@@ -166,10 +166,10 @@ export const exportVoucherPDF = (
       styles: { fontSize: 9 },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'right' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
-        4: { halign: 'right' },
+        1: { halign: 'left' },
+        2: { halign: 'left' },
+        3: { halign: 'left' },
+        4: { halign: 'left' },
       },
     });
     cursorY = (doc as any).lastAutoTable.finalY + 8;
@@ -192,7 +192,7 @@ export const exportVoucherPDF = (
       columnStyles: {
         0: { halign: 'left' },
         1: { halign: 'left' },
-        2: { halign: 'right' },
+        2: { halign: 'left' },
       },
     });
     cursorY = (doc as any).lastAutoTable.finalY + 8;
@@ -228,10 +228,10 @@ export const exportVoucherPDF = (
       startY: cursorY,
       body: summaryRows.map(row => [row[0], row[1]]),
       theme: 'plain',
-      styles: { fontSize: 10, halign: 'right' },
+      styles: { fontSize: 10, halign: 'left' },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'right' },
+        1: { halign: 'left' },
       },
     });
     cursorY = (doc as any).lastAutoTable.finalY + 8;
