@@ -150,8 +150,6 @@ export const exportVoucherPDF = (
     (doc as any).autoTable({
       startY: cursorY,
       head: [['Item', 'Bags', 'Net Wt (kg)', 'Rate', 'Amount']],
-      margin: { left: 14, right: 14 },
-      tableWidth: pageWidth - 28,
       body: transaction.lines.map(line => {
         const crop = crops.find(c => c.id === line.crop_id);
         const rateLabel = `${formatINRPdfSafe(line.rate_value)} / ${line.rate_unit
@@ -166,15 +164,12 @@ export const exportVoucherPDF = (
         ];
       }),
       styles: { fontSize: 9 },
-      headStyles: {
-        valign: 'middle',
-      },
       columnStyles: {
-        0: { halign: 'left', cellWidth: 60 },
-        1: { halign: 'right', cellWidth: 20 },
-        2: { halign: 'right', cellWidth: 30 },
-        3: { halign: 'right', cellWidth: 36 },
-        4: { halign: 'right', cellWidth: 36 },
+        0: { halign: 'left' },
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
       },
     });
     cursorY = (doc as any).lastAutoTable.finalY + 8;
@@ -184,8 +179,6 @@ export const exportVoucherPDF = (
     (doc as any).autoTable({
       startY: cursorY,
       head: [['Charge', 'Type', 'Amount']],
-      margin: { left: 14, right: 14 },
-      tableWidth: pageWidth - 28,
       body: transaction.charges.map(charge => {
         const head = chargeHeads.find(h => h.id === charge.charge_head_id);
         const typeLabel = head?.kind === ChargeKind.Addition ? 'Addition' : 'Deduction';
@@ -197,9 +190,9 @@ export const exportVoucherPDF = (
       }),
       styles: { fontSize: 9 },
       columnStyles: {
-        0: { halign: 'left', cellWidth: 80 },
-        1: { halign: 'left', cellWidth: 40 },
-        2: { halign: 'right', cellWidth: 40 },
+        0: { halign: 'left' },
+        1: { halign: 'left' },
+        2: { halign: 'right' },
       },
     });
     cursorY = (doc as any).lastAutoTable.finalY + 8;
@@ -235,8 +228,6 @@ export const exportVoucherPDF = (
       startY: cursorY,
       body: summaryRows.map(row => [row[0], row[1]]),
       theme: 'plain',
-      margin: { left: 14, right: 14 },
-      tableWidth: pageWidth - 28,
       styles: { fontSize: 10, halign: 'right' },
       columnStyles: {
         0: { halign: 'left' },
