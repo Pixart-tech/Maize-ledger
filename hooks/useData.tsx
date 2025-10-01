@@ -47,23 +47,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   useEffect(() => {
     const seedVersionKey = 'seeded_v2';
-    if (!localStorage.getItem(seedVersionKey)) {
+
+    try {
+      if (!window.localStorage.getItem(seedVersionKey)) {
         setToStorage<Party[]>('parties', DEFAULT_PARTIES);
         setToStorage<Crop[]>('crops', DEFAULT_CROPS);
         setToStorage<ChargeHead[]>('chargeHeads', DEFAULT_CHARGE_HEADS);
         setToStorage<BankAccount[]>('bankAccounts', DEFAULT_BANK_ACCOUNTS);
         setToStorage<Transaction[]>('transactions', DEFAULT_TRANSACTIONS);
-        localStorage.setItem(seedVersionKey, 'true');
-        localStorage.removeItem('seeded');
+        window.localStorage.setItem(seedVersionKey, 'true');
+        window.localStorage.removeItem('seeded');
+      }
+    } catch (error) {
+      console.error('Error seeding localStorage', error);
+    } finally {
+      setParties(getFromStorage<Party[]>('parties', DEFAULT_PARTIES));
+      setCrops(getFromStorage<Crop[]>('crops', DEFAULT_CROPS));
+      setChargeHeads(getFromStorage<ChargeHead[]>('chargeHeads', DEFAULT_CHARGE_HEADS));
+      setBankAccounts(getFromStorage<BankAccount[]>('bankAccounts', DEFAULT_BANK_ACCOUNTS));
+      setTransactions(getFromStorage<Transaction[]>('transactions', DEFAULT_TRANSACTIONS));
+      setLoading(false);
     }
-    
-    setParties(getFromStorage<Party[]>('parties', []));
-    setCrops(getFromStorage<Crop[]>('crops', []));
-    setChargeHeads(getFromStorage<ChargeHead[]>('chargeHeads', []));
-    setBankAccounts(getFromStorage<BankAccount[]>('bankAccounts', []));
-    setTransactions(getFromStorage<Transaction[]>('transactions', []));
-    
-    setLoading(false);
   }, []);
 
   const saveParty = useCallback((party: Party) => {
