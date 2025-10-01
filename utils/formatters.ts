@@ -1,11 +1,13 @@
 
 export const formatINR = (amount: number): string => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+  const formatter = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  });
+
+  const isNegative = amount < 0;
+  const formattedNumber = formatter.format(Math.abs(amount));
+  return `${isNegative ? '-' : ''}₹${formattedNumber}`;
 };
 
 export const formatDate = (dateString: string): string => {
