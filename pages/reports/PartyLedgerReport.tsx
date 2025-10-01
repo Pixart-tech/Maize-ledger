@@ -86,6 +86,12 @@ const PartyLedgerReport: React.FC = () => {
         const doc = new jsPDF();
         const selectedParty = parties.find(p => p.id === selectedPartyId);
 
+        if (typeof doc.autoTable !== 'function') {
+            window?.alert?.('PDF export is currently unavailable. Please try again later.');
+            console.error('jsPDF autoTable plugin is not loaded.');
+            return;
+        }
+
         doc.setFontSize(18);
         doc.text(`Ledger for ${selectedParty?.name || 'N/A'}`, 14, 22);
         
