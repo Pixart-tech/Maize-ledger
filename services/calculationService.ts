@@ -105,9 +105,17 @@ export const calculateTransactionTotals = (
         }
     });
 
-    const grand_total = transaction.type === TransactionType.Purchase
-        ? subtotal + total_additions + total_deductions // For purchase, expenses (deductions) are added to cost
-        : subtotal + total_additions - total_deductions; // For sale, deductions are subtracted
+    const purchaseLikeTypes = [
+        TransactionType.Purchase,
+        TransactionType.Asami,
+        TransactionType.ZeroDalal,
+    ];
+
+    const isPurchaseLike = purchaseLikeTypes.includes(transaction.type);
+
+    const grand_total = isPurchaseLike
+        ? subtotal + total_additions + total_deductions // For purchase-style vouchers, expenses (deductions) are added to cost
+        : subtotal + total_additions - total_deductions; // For sale and other vouchers, deductions are subtracted
 
     const balance = grand_total - transaction.amount_received;
 
