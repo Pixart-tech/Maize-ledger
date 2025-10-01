@@ -1,13 +1,21 @@
 
-export const formatINR = (amount: number): string => {
-  const formatter = new Intl.NumberFormat('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const INR_FORMATTER = new Intl.NumberFormat('en-IN', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
+const formatInrWithPrefix = (amount: number, prefix: string): string => {
   const isNegative = amount < 0;
-  const formattedNumber = formatter.format(Math.abs(amount));
-  return `${isNegative ? '-' : ''}₹${formattedNumber}`;
+  const formattedNumber = INR_FORMATTER.format(Math.abs(amount));
+  return `${isNegative ? '-' : ''}${prefix}${formattedNumber}`;
+};
+
+export const formatINR = (amount: number): string => {
+  return formatInrWithPrefix(amount, '₹');
+};
+
+export const formatINRPdfSafe = (amount: number): string => {
+  return formatInrWithPrefix(amount, 'Rs ');
 };
 
 export const formatDate = (dateString: string): string => {

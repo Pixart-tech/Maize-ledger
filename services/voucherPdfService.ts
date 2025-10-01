@@ -1,6 +1,6 @@
 import { BankAccount, ChargeHead, ChargeKind, Crop, Party, PaymentType, Transaction, TransactionType } from '../types';
 import { calculateTransactionTotals } from './calculationService';
-import { formatDate, formatINR } from '../utils/formatters';
+import { formatDate, formatINRPdfSafe } from '../utils/formatters';
 
 const JsPDFConstructor = typeof window !== 'undefined' ? (window as any)?.jspdf?.jsPDF : undefined;
 
@@ -106,7 +106,7 @@ export const exportVoucherPDF = (
 
     const paymentLines = [
       `Payment Type: ${transaction.payment_type ? toTitleCase(transaction.payment_type) : '—'}`,
-      `Amount: ${formatINR(transaction.amount_received)}`,
+      `Amount: ${formatINRPdfSafe(transaction.amount_received)}`,
       `Mode: ${bankAccount ? 'Bank Transfer' : 'Cash'}`,
     ];
 
@@ -131,7 +131,7 @@ export const exportVoucherPDF = (
 
     const cashLines = [
       `Purpose: ${toTitleCase(transaction.cash_payment_purpose)}`,
-      `Amount: ${formatINR(transaction.amount_received)}`,
+      `Amount: ${formatINRPdfSafe(transaction.amount_received)}`,
     ];
 
     if (transaction.cash_description) {
@@ -152,13 +152,15 @@ export const exportVoucherPDF = (
       head: [['Item', 'Bags', 'Net Wt (kg)', 'Rate', 'Amount']],
       body: transaction.lines.map(line => {
         const crop = crops.find(c => c.id === line.crop_id);
-        const rateLabel = `${formatINR(line.rate_value)} / ${line.rate_unit.replace('per_', '').replace('_', ' ')}`;
+        const rateLabel = `${formatINRPdfSafe(line.rate_value)} / ${line.rate_unit
+          .replace('per_', '')
+          .replace('_', ' ')}`;
         return [
           crop?.name || '—',
           line.bags,
           line.net_weight_kg.toFixed(2),
           rateLabel,
-          formatINR(line.line_amount),
+          formatINRPdfSafe(line.line_amount),
         ];
       }),
       styles: { fontSize: 9 },
@@ -183,7 +185,7 @@ export const exportVoucherPDF = (
         return [
           head?.name || '—',
           typeLabel,
-          formatINR(charge.computed_amount || 0),
+          formatINRPdfSafe(charge.computed_amount || 0),
         ];
       }),
       styles: { fontSize: 9 },
@@ -199,18 +201,23 @@ export const exportVoucherPDF = (
   const summaryRows: Array<[string, string]> = [];
 
   if (isLineVoucher) {
-    summaryRows.push(['Subtotal', formatINR(totals.subtotal)]);
-    summaryRows.push(['Total Additions', formatINR(totals.total_additions)]);
-    summaryRows.push(['Total Deductions', formatINR(totals.total_deductions)]);
-    summaryRows.push(['Grand Total', formatINR(totals.grand_total)]);
-    summaryRows.push(['Amount Received', formatINR(transaction.amount_received)]);
-    summaryRows.push(['Balance', formatINR(totals.balance)]);
+    summaryRows.push(['Subtotal', formatINRPdfSafe(totals.subtotal)]);
+    summaryRows.push(['Total Additions', formatINRPdfSafe(totals.total_additions)]);
+    summaryRows.push(['Total Deductions', formatINRPdfSafe(totals.total_deductions)]);
+    summaryRows.push(['Grand Total', formatINRPdfSafe(totals.grand_total)]);
+    summaryRows.push(['Amount Received', formatINRPdfSafe(transaction.amount_received)]);
+    summaryRows.push(['Balance', formatINRPdfSafe(totals.balance)]);
   } else if (transaction.type === TransactionType.Payment) {
     summaryRows.push(['Payment Type', transaction.payment_type ? toTitleCase(transaction.payment_type) : '—']);
-    summaryRows.push(['Amount', formatINR(transaction.amount_received)]);
-    summaryRows.push(['Balance Impact', transaction.payment_type === PaymentType.Paid ? formatINR(transaction.amount_received) : formatINR(-transaction.amount_received)]);
+    summaryRows.push(['Amount', formatINRPdfSafe(transaction.amount_received)]);
+    summaryRows.push([
+      'Balance Impact',
+      transaction.payment_type === PaymentType.Paid
+        ? formatINRPdfSafe(transaction.amount_received)
+        : formatINRPdfSafe(-transaction.amount_received),
+    ]);
   } else if (transaction.type === TransactionType.Cash) {
-    summaryRows.push(['Amount', formatINR(transaction.amount_received)]);
+    summaryRows.push(['Amount', formatINRPdfSafe(transaction.amount_received)]);
     if (transaction.cash_payment_purpose) {
       summaryRows.push(['Purpose', toTitleCase(transaction.cash_payment_purpose)]);
     }
