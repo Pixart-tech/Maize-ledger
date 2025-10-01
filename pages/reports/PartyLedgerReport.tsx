@@ -4,8 +4,9 @@ import { calculateTransactionTotals } from '../../services/calculationService';
 import { formatDate, formatINR } from '../../utils/formatters';
 import { PaymentType, TransactionType } from '../../types';
 
-declare const jsPDF: any;
 declare const XLSX: any;
+
+const JsPDFConstructor = typeof window !== 'undefined' ? (window as any)?.jspdf?.jsPDF : undefined;
 
 const PartyLedgerReport: React.FC = () => {
     const { parties, transactions, chargeHeads, loading } = useData();
@@ -83,7 +84,15 @@ const PartyLedgerReport: React.FC = () => {
     };
     
     const handleExportPDF = () => {
-        const doc = new jsPDF();
+        const JsPDF = JsPDFConstructor ?? (typeof window !== 'undefined' ? (window as any)?.jspdf?.jsPDF : undefined);
+
+        if (typeof JsPDF !== 'function') {
+            window?.alert?.('PDF export is currently unavailable. Please try again later.');
+            console.error('jsPDF constructor is not available.');
+            return;
+        }
+
+        const doc = new JsPDF();
         const selectedParty = parties.find(p => p.id === selectedPartyId);
 
         if (typeof doc.autoTable !== 'function') {
